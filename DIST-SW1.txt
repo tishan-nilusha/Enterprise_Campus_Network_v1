@@ -1,0 +1,63 @@
+enable
+configure terminal
+hostname DIST-SW1
+
+ip routing
+
+vlan 10
+ name VLAN10_CLIENTS
+vlan 20
+ name VLAN20_CLIENTS
+exit
+
+! Spanning Tree (Active Gateway/Root for VLAN 10)
+spanning-tree mode pvst
+spanning-tree vlan 10 root primary
+spanning-tree vlan 20 root secondary
+
+! EtherChannel to ACC-SW1
+interface range GigabitEthernet 1/0/1 - 2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+ no shutdown
+exit
+
+interface Port-channel 1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+
+! Trunk Link to DIST-SW2 (Inter-DIST Trunk)
+interface GigabitEthernet 1/0/23
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ no shutdown
+exit
+
+! Inter-VLAN Routing Gateways (SVIs)
+interface Vlan10
+ ip address 10.10.0.1 255.255.255.0
+ no shutdown
+
+interface Vlan20
+ ip address 10.21.0.1 255.255.255.0
+ no shutdown
+
+! Primary Link to CORE-SW1
+interface GigabitEthernet 1/0/24
+ no switchport
+ ip address 10.255.11.2 255.255.255.252
+ no shutdown
+
+! Redundant Cross Link to CORE-SW2
+interface GigabitEthernet 1/0/22
+ no switchport
+ ip address 10.255.12.2 255.255.255.252
+ no shutdown
+
+! Static Default Routes (Primary & Floating Backup)
+ip route 0.0.0.0 0.0.0.0 10.255.11.1
+ip route 0.0.0.0 0.0.0.0 10.255.12.1 10
+end
+write memory

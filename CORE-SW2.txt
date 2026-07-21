@@ -1,0 +1,41 @@
+enable
+configure terminal
+hostname CORE-SW2
+
+ip routing
+
+! Link to DIST-SW2 (Primary)
+interface GigabitEthernet 1/0/1
+ no switchport
+ ip address 10.255.13.1 255.255.255.252
+ no shutdown
+
+! Redundant Cross Link to DIST-SW1
+interface GigabitEthernet 1/0/2
+ no switchport
+ ip address 10.255.12.1 255.255.255.252
+ no shutdown
+
+! Inter-Core Link to CORE-SW1
+interface GigabitEthernet 1/0/3
+ no switchport
+ ip address 10.255.10.2 255.255.255.252
+ no shutdown
+
+! Link to EDGE Router
+interface GigabitEthernet 1/0/24
+ no switchport
+ ip address 10.255.2.2 255.255.255.252
+ no shutdown
+
+! Default Route to Edge Router
+ip route 0.0.0.0 0.0.0.0 10.255.2.1
+
+! Return Routes
+ip route 10.10.0.0 255.255.255.0 10.255.13.2
+ip route 10.10.0.0 255.255.255.0 10.255.12.2 10
+
+ip route 10.21.0.0 255.255.255.0 10.255.13.2
+ip route 10.21.0.0 255.255.255.0 10.255.12.2 10
+end
+write memory

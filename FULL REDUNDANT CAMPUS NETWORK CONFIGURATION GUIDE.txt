@@ -1,0 +1,97 @@
+===================================================================
+1. ACCESS SWITCH CONFIGURATION (ACC-SW1 & ACC-SW2)
+===================================================================
+ACC-SW1:
+- Configure VLAN 10 (VLAN10_CLIENTS) & VLAN 20 (VLAN20_CLIENTS)
+- Configure LACP EtherChannel (Port-channel 1) on Fa0/1 - Fa0/2 towards DIST-SW1
+- Assign Access Ports to PCs:
+  * Fa0/10 -> VLAN 10 (PC0 - IP: 10.10.0.100/24, GW: 10.10.0.1)
+  * Fa0/20 -> VLAN 20 (PC1 - IP: 10.21.0.100/24, GW: 10.21.0.1)
+
+ACC-SW2:
+- Configure VLAN 10 (VLAN10_CLIENTS) & VLAN 20 (VLAN20_CLIENTS)
+- Configure LACP EtherChannel (Port-channel 2) on Fa0/1 - Fa0/2 towards DIST-SW2
+- Assign Access Ports to PCs:
+  * Fa0/10 -> VLAN 10 (PC2 - IP: 10.10.0.101/24, GW: 10.10.0.1)
+  * Fa0/20 -> VLAN 20 (PC3 - IP: 10.21.0.101/24, GW: 10.21.0.1)
+
+===================================================================
+2. DISTRIBUTION SWITCH CONFIGURATION (DIST-SW1 & DIST-SW2)
+===================================================================
+DIST-SW1:
+- Enable "ip routing"
+- Create SVIs:
+  * Vlan10: 10.10.0.1/24 (Active Gateway for VLAN 10)
+  * Vlan20: 10.21.0.1/24 (Backup Gateway for VLAN 20)
+- Configure Rapid PVST: Root Primary for VLAN 10, Root Secondary for VLAN 20
+- Configure LACP EtherChannel (Port-channel 1) on Gi1/0/1 - Gig1/0/2 towards ACC-SW1
+- Configure Inter-DIST Trunk Link on Gig1/0/23 towards DIST-SW2
+- Configure L3 Routed Interfaces:
+  * Gig1/0/24 (towards CORE-SW1) -> IP: 10.255.11.2/30
+  * Gig1/0/22 (Redundant Cross Link towards CORE-SW2) -> IP: 10.255.12.2/30
+- Add Static Routes:
+  * Primary Default Route: ip route 0.0.0.0 0.0.0.0 10.255.11.1
+  * Floating Backup Default Route: ip route 0.0.0.0 0.0.0.0 10.255.12.1 10
+
+DIST-SW2:
+- Enable "ip routing"
+- Create SVIs:
+  * Vlan10: 10.10.0.2/24 (Backup Gateway for VLAN 10)
+  * Vlan20: 10.21.0.2/24 (Active Gateway for VLAN 20)
+- Configure Rapid PVST: Root Primary for VLAN 20, Root Secondary for VLAN 10
+- Configure LACP EtherChannel (Port-channel 2) on Gi1/0/1 - Gig1/0/2 towards ACC-SW2
+- Configure Inter-DIST Trunk Link on Gig1/0/23 towards DIST-SW1
+- Configure L3 Routed Interfaces:
+  * Gig1/0/24 (towards CORE-SW2) -> IP: 10.255.13.2/30
+  * Gig1/0/22 (Redundant Cross Link towards CORE-SW1) -> IP: 10.255.14.2/30
+- Add Static Routes:
+  * Primary Default Route: ip route 0.0.0.0 0.0.0.0 10.255.13.1
+  * Floating Backup Default Route: ip route 0.0.0.0 0.0.0.0 10.255.14.1 10
+
+===================================================================
+3. CORE SWITCH CONFIGURATION (CORE-SW1 & CORE-SW2)
+===================================================================
+CORE-SW1:
+- Enable "ip routing"
+- Configure L3 Routed Interfaces (/30 subnets):
+  * Gig1/0/1 (towards DIST-SW1) -> IP: 10.255.11.1/30
+  * Gig1/0/2 (Redundant Cross Link towards DIST-SW2) -> IP: 10.255.14.1/30
+  * Gig1/0/3 (Inter-Core Link towards CORE-SW2) -> IP: 10.255.10.1/30
+  * Gig1/0/24 (towards EDGE-RT) -> IP: 10.255.1.2/30
+- Static Default Route to EDGE-RT: ip route 0.0.0.0 0.0.0.0 10.255.1.1
+- Static Return Routes to Internal Subnets:
+  * ip route 10.10.0.0 255.255.255.0 10.255.11.2
+  * ip route 10.10.0.0 255.255.255.0 10.255.14.2 10 (Backup)
+  * ip route 10.21.0.0 255.255.255.0 10.255.11.2
+  * ip route 10.21.0.0 255.255.255.0 10.255.14.2 10 (Backup)
+
+CORE-SW2:
+- Enable "ip routing"
+- Configure L3 Routed Interfaces (/30 subnets):
+  * Gig1/0/1 (towards DIST-SW2) -> IP: 10.255.13.1/30
+  * Gig1/0/2 (Redundant Cross Link towards DIST-SW1) -> IP: 10.255.12.1/30
+  * Gig1/0/3 (Inter-Core Link towards CORE-SW1) -> IP: 10.255.10.2/30
+  * Gig1/0/24 (Backup Link towards EDGE-RT) -> IP: 10.255.2.2/30
+- Static Default Route to EDGE-RT: ip route 0.0.0.0 0.0.0.0 10.255.2.1
+- Static Return Routes to Internal Subnets:
+  * ip route 10.10.0.0 255.255.255.0 10.255.13.2
+  * ip route 10.10.0.0 255.255.255.0 10.255.12.2 10 (Backup)
+  * ip route 10.21.0.0 255.255.255.0 10.255.13.2
+  * ip route 10.21.0.0 255.255.255.0 10.255.12.2 10 (Backup)
+
+===================================================================
+4. EDGE ROUTER CONFIGURATION (EDGE-RT)
+===================================================================
+EDGE-RT:
+- Interface Gi0/0/0 (Primary Inside) -> IP: 10.255.1.1/30 (ip nat inside)
+- Interface Gi0/0/1 (Backup Inside)  -> IP: 10.255.2.1/30 (ip nat inside)
+- Interface Gi0/0/2 (Outside / Internet Cloud) -> IP: Public IP / DHCP (ip nat outside)
+- Define NAT Access-List (NAT_ACL):
+  * permit 10.10.0.0 0.0.0.255
+  * permit 10.21.0.0 0.0.0.255
+- Apply PAT/NAT Overload: 
+  * ip nat inside source list NAT_ACL interface Gi0/0/2 overload
+- Static Default Route towards Internet: ip route 0.0.0.0 0.0.0.0 Gi0/0/2
+- Static Return Routes to Internal Enterprise Network:
+  * ip route 10.0.0.0 255.0.0.0 10.255.1.2 (Primary via CORE-SW1)
+  * ip route 10.0.0.0 255.0.0.0 10.255.2.2 10 (Backup via CORE-SW2)

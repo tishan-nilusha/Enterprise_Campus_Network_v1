@@ -1,0 +1,32 @@
+enable
+configure terminal
+hostname ACC-SW2
+
+vlan 10
+ name VLAN10_CLIENTS
+vlan 20
+ name VLAN20_CLIENTS
+exit
+
+! LACP EtherChannel to DIST-SW2
+interface range FastEthernet 0/1 - 2
+ switchport mode trunk
+ channel-group 2 mode active
+ no shutdown
+exit
+
+interface Port-channel 2
+ switchport mode trunk
+exit
+
+interface FastEthernet 0/10
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+
+interface FastEthernet 0/20
+ switchport mode access
+ switchport access vlan 20
+ no shutdown
+end
+write memory

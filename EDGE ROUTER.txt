@@ -1,0 +1,39 @@
+enable
+configure terminal
+hostname EDGE-RT
+
+! Interface to CORE-SW1
+interface GigabitEthernet 0/0
+ ip address 10.255.1.1 255.255.255.252
+ ip nat inside
+ no shutdown
+
+! Interface to CORE-SW2
+interface GigabitEthernet 0/1
+ ip address 10.255.2.1 255.255.255.252
+ ip nat inside
+ no shutdown
+
+! Simulated WAN / Internet Interface (Gig0/2 or Loopback)
+interface GigabitEthernet 0/2
+ ip address 203.0.113.1 255.255.255.252
+ ip nat outside
+ no shutdown
+
+! Default Route to Internet
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet 0/2
+
+! Static Return Route to Internal Networks via Primary CORE-SW1 (and Backup CORE-SW2)
+ip route 10.0.0.0 255.0.0.0 10.255.1.2
+ip route 10.0.0.0 255.0.0.0 10.255.2.2 10
+
+! ACL allowing all internal client subnets to pass NAT
+ip access-list standard NAT_ACL
+ permit 10.10.0.0 0.0.0.255
+ permit 10.21.0.0 0.0.0.255
+exit
+
+! PAT Overload setup
+ip nat inside source list NAT_ACL interface GigabitEthernet 0/2 overload
+end
+write memory
