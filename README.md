@@ -1,4 +1,4 @@
-# 🚀 Enterprise Campus Network Design & Configuration (3-Tier Architecture)
+# Enterprise Campus Network Design & Configuration (3-Tier Architecture)
 
 An enterprise-grade, highly available 3-Tier Campus Network built and simulated in **Cisco Packet Tracer**. This project demonstrates complete network redundancy, inter-VLAN routing, high-availability switching, floating static routes, and Dynamic NAT/PAT for WAN reachability.
 
