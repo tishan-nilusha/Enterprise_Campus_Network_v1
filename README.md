@@ -51,5 +51,5 @@ An enterprise-grade, highly available 3-Tier Campus Network built and simulated 
 
 ## 👤 Author
 
-**Tishan Nilusha**
-*Cybersecurity Student | Exploring Web Security, Ethical Hacking & Network Security*
+**Tishan Nilusha**                                              
+ *Cybersecurity Student | Exploring Web Security, Ethical Hacking & Network Security*
