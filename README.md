@@ -47,7 +47,7 @@ An enterprise-grade, highly available 3-Tier Campus Network built and simulated 
 ├── Enterprise_Campus_Network_v1.pkt      # Cisco Packet Tracer Lab File
 └── Screenshot 2026-07-21 195309.png      # Network Topology Diagram
 
-text```
+```
 
 ## 👤 Author
 
